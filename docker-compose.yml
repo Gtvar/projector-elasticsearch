@@ -1,0 +1,46 @@
+version: '3.6'
+services:
+  es01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.2.1
+    container_name: es_search
+    tty: true
+    privileged: true
+    stdin_open: true
+    environment:
+      - node.name=es01
+      - cluster.name=yk-cluster
+      - discovery.seed_hosts=es01
+      - discovery.type=single-node
+      - cluster.routing.allocation.enable=all
+      - ELASTIC_PASSWORD=qwerty
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - es-test
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.2.1
+    container_name: es_kibana
+    volumes:
+      - kibanadata:/usr/share/kibana/data
+    ports:
+      - 5601:5601
+    environment:
+      - SERVERNAME=kibana
+      - ELASTICSEARCH_HOSTS=http://es01:9200
+      - ELASTICSEARCH_USERNAME=kibana_system
+      - ELASTICSEARCH_PASSWORD=qwerty
+    depends_on:
+      - es01
+    networks:
+      - es-test
+
+volumes:
+  esdata01: {}
+  kibanadata: {}
+
+networks:
+  es-test:
+    driver: bridge
